@@ -3,7 +3,7 @@ import os
 from twitchio.ext import commands
 
 from config import irc_token, client_id
-from util import queue_match_replay, get_queue, is_match_id
+from util import queue_match_replay, get_queue, is_match_id, add_skip_list
 
 # Channels is the initial channels to join, this could be a list, tuple or callable
 bot = commands.Bot(
@@ -32,7 +32,16 @@ async def event_message(message):
 # Register a command with the bot
 @bot.command(name='next', aliases=['n'])
 async def next_command(ctx):
-    if ctx.author.is_mod:
+    skip = False
+    if not ctx.author.is_mod:
+        viewers = ctx.get_stream()['viewers'] / 2
+        # If we are equal to or greater than half the number of viewers
+        if viewers <= add_skip_list(ctx.author.id):
+            skip = True
+    else:
+        skip = True
+
+    if skip:
         await ctx.send(f'Okay {ctx.author.name} - I will restart Sc2! - Please wait')
         os.system("taskkill /f /im SC2_x64.exe")
         os.system("taskkill /f /im ExampleObserver.exe")

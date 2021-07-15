@@ -3,6 +3,7 @@ import sqlite3
 database_file = "data.db"
 db = sqlite3.connect(database_file)
 
+skip_count = []
 
 def create_db():
     cursor = db.cursor()
@@ -16,6 +17,12 @@ def queue_match_replay(match_id: int):
     db.commit()
 
 
+def add_skip_list(name: str):
+    if skip_count.count(name) <= 0:
+        skip_count.append(name)
+    return len(skip_count)
+
+
 def get_queue():
     cursor = db.cursor()
     cursor.execute('select match_id from match_queue')
@@ -26,6 +33,7 @@ def get_queue():
 
 
 def queue_pop_next_match():
+    skip_count.clear() # clear the list of skip names when we move to the next game
     cursor = db.cursor()
     cursor.execute('select match_id from match_queue limit 1')
     row = cursor.fetchone()
